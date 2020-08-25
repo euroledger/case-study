@@ -1,14 +1,7 @@
 import React, { Component } from 'react';
 import './button.css';
-import etsyItems from './components/Fields/etsy';
-import ebayItems from './components/Fields/ebay';
-import uberItems from './components/Fields/uber';
-import amazonItems from './components/Fields/amazon';
-import facebookItems from './components/Fields/facebook';
-import linkedinItems from './components/Fields/linkedin';
-import stackoverflowItems from './components/Fields/stackoverflow';
-import twitterItems from './components/Fields/twitter';
-import upworkItems from './components/Fields/upwork';
+import claimItems from './components/Fields/claim';
+import newPolicyItems from './components/Fields/newpolicy';
 import RegistrationDialog from './components/RegistrationDialog';
 import NavBar from './components/NavBar';
 import Form from './components/Form';
@@ -17,6 +10,8 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import TabPanel from './components/TabPanel';
 
+import GlobalCss from './components/Global';
+
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -24,7 +19,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import axios from 'axios';
 import QRcode from 'qrcode.react';
 import crypto from 'crypto';
-import ebayRoutes from './routes/ebay';
+import acmeRoutes from './routes/acme';
 import etsyRoutes from './routes/etsy';
 import uberRoutes from './routes/uber';
 import signInRoutes from './routes/signInRoutes';
@@ -32,6 +27,8 @@ import signInRoutes from './routes/signInRoutes';
 axios.defaults.baseURL = 'https://localhost:3002/';
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
+
+const policyID = Math.floor(10000000 + Math.random() * 90000000);
 
 const muiTheme = createMuiTheme({
     typography: {
@@ -44,14 +41,11 @@ const muiTheme = createMuiTheme({
     }
 });
 const initState = {
-    user: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
+    policy: {
+        policyID: policyID,
+        effectiveDate: "",
+        expiryDate: "",
+        insuranceCompany: "Acme",
     },
     etsyuser: {
         UserID: "",
@@ -60,67 +54,7 @@ const initState = {
         RegistrationDate: "",
         CreationDate: ""
     },
-    uberuser: {
-        DriverID: "",
-        Rating: "",
-        ActivationStatus: "",
-        TripCount: "",
-        CreationDate: ""
-    },
-    amazonuser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
-    facebookuser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
-    linkedinuser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
-    stackoverflowuser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
-    twitteruser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
-    upworkuser: {
-        UserID: "",
-        FeedbackScore: "",
-        RegistrationDate: "",
-        UniqueNegativeFeedbackCount: "",
-        UniquePositiveFeedbackCount: "",
-        PositiveFeedbackPercent: "",
-        CreationDate: ""
-    },
+ 
     qr_open: false,
     qr_hasClosed: false,
     qr_placeholder: "",
@@ -128,7 +62,7 @@ const initState = {
     login_url: "",
     registering: false,
     loggingIn: false,
-    ebay: {
+    acme: {
         qr_feedbackCollected: false,
         credential_accepted: true,
         verification_accepted: true,
@@ -142,55 +76,7 @@ const initState = {
         has_been_revoked: true,
         loading: false,
     },
-    uber: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    amazon: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    facebook: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    linkedin: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    stackoverflow: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    twitter: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
-    upwork: {
-        qr_feedbackCollected: false,
-        credential_accepted: true,
-        verification_accepted: true,
-        has_been_revoked: true,
-        loading: false,
-    },
+  
     register: false,
     register_form_open: false,
     login: false,
@@ -241,28 +127,26 @@ export class App extends Component {
     }
 
     onIssue = async () => {
-        const ebayDSR = {
-            name: this.state.user.UserID,
-            feedbackscore: this.state.user.FeedbackScore.toString(),
-            registrationdate: this.state.user.RegistrationDate,
-            negfeedbackcount: this.state.user.UniqueNegativeFeedbackCount.toString(),
-            posfeedbackcount: this.state.user.UniquePositiveFeedbackCount.toString(),
-            posfeedbackpercent: this.state.user.PositiveFeedbackPercent.toString(),
-            createdat: this.state.user.CreationDate.toString()
+        const effectiveDate = this.formatDate(new Date(), 0);
+        const expiryDate = this.formatDate(new Date(), 1);
+        const policyDetails = {
+            policyID: this.state.policy.policyID,
+            effectiveDate: effectiveDate,
+            expiryDate: expiryDate,
+            insuranceCompany: this.state.policy.insuranceCompany
         }
 
         this.setState(prevState => ({
-            ebay: { ...prevState.ebay, credential_accepted: false }
+            acme: { ...prevState.acme, credential_accepted: false }
         }));
 
-        await ebayRoutes.issue(ebayDSR);
+        await acmeRoutes.issue(policyDetails);
 
-        console.log("QUACK >>>>>>>>>>>>> we have done the ebay issue");
+        console.log("QUACK >>>>>>>>>>>>> we have done the Acme issue");
 
         this.setState(prevState => ({
-            ebay: { ...prevState.ebay, credential_accepted: true, has_been_revoked: false }
+            acme: { ...prevState.acme, credential_accepted: true, has_been_revoked: false }
         }));
-        sessionStorage.setItem("selectedTab", 0);
     }
 
     onEtsyIssue = async () => {
@@ -287,111 +171,6 @@ export class App extends Component {
         }));
         sessionStorage.setItem("selectedTab", 1);
     }
-
-    onUberIssue = async () => {
-        const uberRatings = {
-            driver: this.state.uberuser.DriverID,
-            rating: this.state.uberuser.Rating.toString(),
-            status: this.state.uberuser.ActivationStatus.toString(),
-            tripcount: this.state.uberuser.TripCount,
-            createdat: this.state.user.CreationDate.toString()
-        }
-
-        this.setState(prevState => ({
-            uber: { ...prevState.uber, credential_accepted: false }
-        }));
-
-        console.log("ISSUING UBER CREDENTIALS: ", uberRatings);
-
-        await uberRoutes.issue(uberRatings);
-
-        this.setState(prevState => ({
-            uber: { ...prevState.uber, credential_accepted: true, has_been_revoked: false }
-        }));
-        sessionStorage.setItem("selectedTab", "4");
-    }
-
-    onEbayRevoke = async () => {
-        this.setState(prevState => ({
-            ebay: { ...prevState.ebay, loading: true }
-        }));
-        console.log("Revoking EBAY credentials...");
-        await ebayRoutes.revoke();
-
-        // reset state back to initial state, clear the form and the saved ebay session data
-        this.setState(prevState => ({
-            ebay: { ...prevState.ebay, loading: false, has_been_revoked: true, qr_feedbackCollected: false },
-            user: {
-                UserID: "",
-                FeedbackScore: "",
-                RegistrationDate: "",
-                UniqueNegativeFeedbackCount: "",
-                UniquePositiveFeedbackCount: "",
-                PositiveFeedbackPercent: "",
-                CreationDate: ""
-            }
-        }));
-        sessionStorage.setItem("ebayUserData", null);
-    }
-
-    onEtsyRevoke = async () => {
-        this.setState(prevState => ({
-            etsy: { ...prevState.etsy, loading: true }
-        }));
-        console.log("Revoking ETSY credentials...");
-        await etsyRoutes.revoke();
-
-        // reset state back to initial state, clear the form and the session data
-        this.setState(prevState => ({
-            etsy: { ...prevState.etsy, loading: false, has_been_revoked: true, qr_feedbackCollected: false },
-            etsyuser: {
-                UserID: "",
-                FeedbackCount: "",
-                PositiveFeedbackPercent: "",
-                RegistrationDate: "",
-                CreationDate: ""
-            }
-        }));
-        sessionStorage.setItem("etsyUserData", null);
-
-    }
-
-    onUberRevoke = async () => {
-        this.setState(prevState => ({
-            uber: { ...prevState.uber, loading: true }
-        }));
-        console.log("Revoking UBER credentials...");
-
-        await uberRoutes.revoke();
-
-        // reset state back to initial state, clear the form and the session data
-        this.setState(prevState => ({
-            uber: { ...prevState.uber, loading: false, has_been_revoked: true, qr_feedbackCollected: false },
-            uberuser: {
-                DriverID: "",
-                Rating: "",
-                ActivationStatus: "",
-                TripCount: "",
-                CreationDate: ""
-            }
-        }));
-        sessionStorage.setItem("uberUserData", null);
-
-    }
-
-    // onVerify = async () => {
-
-    //     this.setState(prevState => ({
-    //         ebay: { ...prevState.ebay, verification_accepted: false }
-    //     }));
-    //     console.log("Verifying credentials...");
-    //     await axios.post('/api/sendkeyverification', null);
-    //     await axios.get('/api/verification_accepted', null);
-
-    //     this.setState(prevState => ({
-    //         ebay: { ...prevState.ebay, verification_accepted: true, has_been_revoked: false }
-    //     }));
-    // }
 
     setEbayFieldValue = (event) => {
         const { target: { name, value } } = event;
@@ -631,11 +410,11 @@ export class App extends Component {
         });
     }
 
-    formatDate = (date) => {
+    formatDate = (date, addYears) => {
         var d = new Date(date),
             month = '' + (d.getMonth() + 1), // add 1 as January = 0
             day = '' + d.getDate(),
-            year = d.getFullYear();
+            year = d.getFullYear() + addYears;
 
         if (month.length < 2) month = '0' + month;
         if (day.length < 2) day = '0' + day;
@@ -710,7 +489,7 @@ export class App extends Component {
 
         this.setState({ value: 0 });
     }
-    
+
     etsyAuth = async () => {
         console.log("Going across to Etsy!...");
         let res;
@@ -883,7 +662,7 @@ export class App extends Component {
     }
 
     getInitialAcceptedLabel(platform) {
-        return (this.state[platform].credential_accepted ? `Import User Reputation Data from ${platform}` : "Awaiting Acceptance...");
+        return (this.state[platform].credential_accepted ? `Create Policy` : "Awaiting Acceptance...");
     }
 
     getAcceptedLabelRevoke(platform) {
@@ -1116,7 +895,7 @@ export class App extends Component {
         console.log("state = ", state);
         if (state) {
             this.setState(prevState => ({
-                state: { ...prevState, state}
+                state: { ...prevState, state }
             }));
         }
     }
@@ -1142,7 +921,7 @@ export class App extends Component {
         console.log("state = ", state);
         if (state) {
             this.setState(prevState => ({
-                state: { ...prevState, state}
+                state: { ...prevState, state }
             }));
         }
     }
@@ -1175,6 +954,7 @@ export class App extends Component {
 
     render() {
 
+
         let web = sessionStorage.getItem("waitingForEbayUserData");
         let wet = sessionStorage.getItem("waitingForEtsyUserData");
         if (web === "true") {
@@ -1195,22 +975,25 @@ export class App extends Component {
         return (
             <ThemeProvider muiTheme={muiTheme}>
                 <div >
+                    <GlobalCss></GlobalCss>
                     <NavBar parent={this}></NavBar>
-                  
+
                     <Paper style={{
                         height: '800px',
-                        backgroundImage: `url(${"main.jpg"})`,
+                        backgroundImage: `url(${"hospital.jpg"})`,
                         backgroundRepeat: "no-repeat",
                         backgroundPosition: "center center",
                         backgroundSize: "cover",
                         backgroundAttachment: "fixed",
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
                         flexGrow: 1
                     }}>
                         <Tabs
                             value={this.state.value}
                             onChange={this.handleChange}
-                            indicatorColor="primary"
-                            textColor="primary"
+                            // indicatorColor="primary"
+                            // textColor="white"
+                            inkBarStyle={{ background: 'blue' }}
                             initialSelectedIndex="1"
                             centered
                         >
@@ -1221,7 +1004,7 @@ export class App extends Component {
                         <TabPanel value={this.state.value} index={0}>
                             <Form
                                 parent={this}
-                                items={ebayItems}
+                                items={newPolicyItems}
                                 loading={this.state.ebay.loading}
                                 card={this.state.user}
                                 title={"Create New Insurance Policy"}
@@ -1231,14 +1014,14 @@ export class App extends Component {
                         <TabPanel value={this.state.value} index={1}>
                             <Form
                                 parent={this}
-                                items={etsyItems}
+                                items={claimItems}
                                 loading={this.state.ebay.loading}
                                 card={this.state.etsyuser}
                                 title={"Enter Claim Details"}
                                 platform={"etsy"}>
                             </Form>
                         </TabPanel>
-                      
+
                     </Paper>
                     <RegistrationDialog
                         form_open={this.state.register_form_open}

@@ -1,0 +1,20 @@
+import {
+    withStyles,
+} from '@material-ui/core/styles';
+
+const GlobalCss = withStyles({
+    '@global': {
+        '.MuiOutlinedInput-root': {
+            borderRadius: 0,
+            color: 'black',
+            fontWidth: 900
+        },
+        '.MuiTab-wrapper': {
+            color: 'white'
+        }
+    }
+
+
+})(() => null);
+
+export default GlobalCss;

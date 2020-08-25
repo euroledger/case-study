@@ -1,17 +1,21 @@
-# Feedback API Quickstart
+# Case Study: Medical Insurance Demo Quickstart
 
-This is the Capena-Delega demo application which allows users to import reputation data from eBay and Etsy (with more to follow)
-and then to have those credentials issued as digitally signed transactions on the Hyperledger Indy ledger. Users' data is then stored in their digital wallets allowing for reuse (transferrence) of those credentials to downstream verifiers.
+This is the case study demo application which allows a user to create a new account with a fictional medical insurance company, Acme Insurance, and then, once registered, to request that Acme issues the new insurance document as a verifiable credential to the user wallet, which resides on a mobile app.
 
-The Capena-APPIA demo will show the interaction between the users and those downstream platforms.
+The insurance document is a digital representation of a paper insurance certificate, and is proof that the holder of the certificate has a non-revoked insurance policy.
 
-This application, the upstream Capena-Delega Proxy Issuer, consists of a React front end client, and an expressjs server. The server uses third party nodejs clients to access eBay and Etsy APIs. These clients are @hendt/ebay-api and etsy-js respectively.
+There is a second web application which is a prototype of a hospital website. This site allows the same user as above to request a medical certificate, which represents a proof that the user (patient) has received some medical treatment and the value of that treatment. This user can then request that Acme Insurance request this certificate as proof of treatment received as part of the claims procedure. Once verified, the user is then reimbursed by Acme for medical costs incurred.
 
-The Aries SSI agent communication uses the streetcred API.
+The SSI agent communication uses the Trinsic API and the User Wallet is the standard Trinsic Phone App.
 
-# ExpressJS eBay and Etsy
+# ExpressJS 
 
-There are two express modules which allow feedback to be imported from ebay and etsy. These are in /routes/ebay and /routes/etsy.
+The two web servers are written using ExpressJS which allows them to listen to external communications (webhooks) via their SSI agent, and also API calls from the front end instructing the server(s) to perform some action.
+
+
+# Acme Insurance : Registration and New Policy
+
+# Acme Insurance : Claims Procedure
 
 # Ebay Feedback API
 The first endpoint that is invoked is a GET call to /auth/ebay. If this is the first time the app has accessed eBay it will display a login screen in which a valid eBay user needs to be entered. For most subsequent invocations this will not be needed, although it does display this when the user access token is expired (seems to be about once per day).

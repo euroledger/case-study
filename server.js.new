@@ -20,12 +20,6 @@ const client = new AgencyServiceClient(
     new Credentials(process.env.ACCESSTOK, process.env.SUBKEY),
     { noRetryPolicy: true });
 
-
-var certOptions = {
-    key: fs.readFileSync(path.resolve('./cert/server.key')),
-    cert: fs.readFileSync(path.resolve('./cert/server.crt'))
-}
-
 var app = express();
 app.use(cors());
 app.use(parser.json());
@@ -85,7 +79,7 @@ app.post('/webhook', async function (req, res) {
                         'Last Name': param_obj["lastname"],
                         'Email Address': param_obj["email"],
                         'Country': param_obj["country"],
-                        'Acme Access Token': param_obj["passcode"]
+                        'Capena Access Token': param_obj["passcode"]
                     }
                 }
             }
@@ -196,19 +190,26 @@ app.post('/webhook', async function (req, res) {
 
 //FRONTEND ENDPOINTS
 
-app.post('/api/acme/issue', cors(), async function (req, res) {
-    console.log("IN /api/acme/issue");
+app.post('/api/ebay/issue', cors(), async function (req, res) {
+    platform = "ebay";
+    console.log("IN /api/ebay/issue");
     if (connectionId) {
+     
+        const d = new Date();
         var params =
         {
             credentialOfferParameters: {
-                definitionId: process.env.POLICY_ID,
+                definitionId: process.env.CRED_DEF_ID_EBAY,
                 connectionId: connectionId,
                 credentialValues: {
-                    "Policy ID": "policyId",
-                    "Effective Date": req.body["name"],
-                    "Expiry Date": req.body["feedbackscore"],
-                    "Insurance Company": req.body["registrationdate"],
+                    "Platform": "ebay",
+                    "User Name": req.body["name"],
+                    "Feedback Score": req.body["feedbackscore"],
+                    "Registration Date": req.body["registrationdate"],
+                    "Negative Feedback Count": req.body["negfeedbackcount"],
+                    "Positive Feedback Count": req.body["posfeedbackcount"],
+                    "Positive Feedback Percent": req.body["posfeedbackpercent"],
+                    "Created At": d.toISOString()
                 }
             }
         }
@@ -434,7 +435,7 @@ const getInvite = async (id) => {
 
 // for graceful closing
 // var server = https.createServer(certOptions, app);
-var server = https.createServer(certOptions, app);
+var server = https.createServer({}, app);
 async function onSignal() {
     var webhookId = cache.get("webhookId");
     const p1 = await client.removeWebhook(webhookId);

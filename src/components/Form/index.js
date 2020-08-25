@@ -31,7 +31,7 @@ const Form = ({ parent, items, loading, card, title, platform }) => {
     const getLogo = () => {
         if (platform === "ebay") {
             return (
-                <img style={{ marginLeft: '127px', marginTop: '-50px', height: '170px', width: '180px' }} src='ebay.png' alt=""/>
+                <img style={{ marginLeft: '127px', height: '114px', width: '157px', marginBottom:'40px' }} src='wellness.jpg' alt=""/>
             )
         } else if (platform === "etsy") {
             return (
