@@ -1,0 +1,55 @@
+/* .connectbtn {
+    height: 30px;
+    width: 200px;
+    border: 1px solid #448000;
+    background-color: #66bf00;
+    background-image: linear-gradient(to top,#4b8c00,#66bf00);
+    color: #fff;
+    text-shadow: 1px 1px #448000;
+    box-shadow: inset 0 1px #92d941;
+    padding: 12px;
+    font-size: 14px;
+    cursor:pointer;
+} */
+.registerbutton {
+    height: 30px;
+    width: 100%;
+    border: 1px solid #448000;
+    background-color: #66bf00;
+    background-image: linear-gradient(to top,#4b8c00,#66bf00);
+    color: #fff;
+    text-shadow: 1px 1px #448000;
+    box-shadow: inset 0 1px #92d941;
+    padding: 0px;
+    font-size: 14px; 
+    border-radius: 5px;
+    cursor:pointer; 
+}
+.registerbutton:disabled,
+.revokebutton:disabled,
+.registerbutton[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: default;
+  background-image: none;
+  box-shadow: none;
+}
+
+.revokebutton {
+    height: 30px;
+    width: 100%;
+    border: 1px solid #800f00;
+    background-color: #a10b06;
+    background-image: linear-gradient(to top,#a00000,#ad9493);
+    color: white;
+    text-shadow: 1px 1px #800f00;
+    box-shadow: inset 0 1px #942828;
+    padding: 0px;
+    font-size: 14px; 
+    border-radius: 5px;
+    cursor:pointer; 
+}
+
+
+
