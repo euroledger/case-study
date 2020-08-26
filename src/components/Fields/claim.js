@@ -1,29 +1,14 @@
-const etsyItems = [
+const claimItems = [
     {
-        id: "UserID",
-        label: "User Name",
+        id: "policyID",
+        label: "Policy ID",
         disabled: true
     },
     {
-        id: "FeedbackCount",
-        label: "Feedback Count",
-        disabled: false
-    },
-    {
-        id: "RegistrationDate",
-        label: "Registration Date",
+        id: "customerName",
+        label: "Customer ID",
         disabled: true
     },
-    {
-        id: "PositiveFeedbackPercent",
-        label: "Positive Feedback Percent",
-        disabled: false
-    },
-    {
-        id: "CreationDate",
-        label: "Credential Issue Date",
-        disabled: true
-    }
 ];
 
-export default etsyItems;
+export default claimItems;

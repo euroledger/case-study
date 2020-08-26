@@ -1,8 +1,8 @@
 # Case Study: Medical Insurance Demo Quickstart
 
-This is the case study demo application which allows a user to create a new account with a fictional medical insurance company, Acme Insurance, and then, once registered, to request that Acme issues the new insurance document as a verifiable credential to the user wallet, which resides on a mobile app.
+This is the case study demo application which allows a user to create a new account with a fictional medical insurance company, Acme Insurance, and then, once registered, to create a new insurance policy. Once the new policy is created, Acme issues the new insurance policy certificate as a verifiable credential to the user wallet, which resides on a mobile app.
 
-The insurance document is a digital representation of a paper insurance certificate, and is proof that the holder of the certificate has a non-revoked insurance policy.
+The insurance certificate credential is a digital representation of a paper insurance certificate, and is proof that the holder of the certificate has a non-revoked insurance policy.
 
 There is a second web application which is a prototype of a hospital website. This site allows the same user as above to request a medical certificate, which represents a proof that the user (patient) has received some medical treatment and the value of that treatment. This user can then request that Acme Insurance request this certificate as proof of treatment received as part of the claims procedure. Once verified, the user is then reimbursed by Acme for medical costs incurred.
 

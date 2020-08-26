@@ -6,8 +6,6 @@ module.exports = (app) => {
     let ebayUserData = {};
     let feedbackObtained = false;
 
-    console.log("EBAY_CLIENT_ID = ", process.env.EBAY_CLIENT_ID);
-
     const eBay = new eBayApi({
         appId: 'MikeRich-EuroLedg-PRD-f193ff38b-ecdaff89',
         certId: 'PRD-193ff38bb57e-c123-43e7-ac39-b145',

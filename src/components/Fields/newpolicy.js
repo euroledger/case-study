@@ -1,6 +1,6 @@
 const newPolicyItems = [
     {
-        id: "UserID",
+        id: "policyID",
         label: "Policy ID",
         disabled: true
     },

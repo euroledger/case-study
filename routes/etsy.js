@@ -8,8 +8,6 @@ module.exports = (app) => {
     let userData = {};
     let feedbackObtained = false;
 
-    console.log("ETSY KEYSTRING = ", process.env.ETSY_KEYSTRING);
-
     const etsyclient = etsyjs.client({
         key: process.env.ETSY_KEYSTRING,
         secret: process.env.ETSY_SHARED_SECRET,

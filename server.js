@@ -39,9 +39,7 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-let ebayCredentialId;
-let etsyCredentialId;
-let uberCredentialId;
+let acmeCredentialId;
 let connectionId;
 let registered = false;
 let loginConfirmed = false;
@@ -96,18 +94,12 @@ app.post('/webhook', async function (req, res) {
         else if (req.body.message_type === 'credential_request') {
             console.log("cred request notif");
             // if (connected) {
-            if (platform === "ebay") {
-                ebayCredentialId = req.body.object_id;
-                console.log("Issuing ebay credential to wallet, id = ", ebayCredentialId);
-                await client.issueCredential(ebayCredentialId);
-            } else if (platform === "etsy") {
-                etsyCredentialId = req.body.object_id;
-                console.log("Issuing etsy credential to wallet, id = ", etsyCredentialId);
-                await client.issueCredential(etsyCredentialId);
-            } else if (platform === "uber") {
-                uberCredentialId = req.body.object_id;
-                console.log("Issuing uber credential to wallet, id = ", uberCredentialId);
-                await client.issueCredential(uberCredentialId);
+            console.log("IMPORTANT platform = ", platform);
+
+            if (platform === "acme") {
+                acmeCredentialId = req.body.object_id;
+                console.log("Issuing acme credential to wallet, id = ", acmeCredentialId);
+                await client.issueCredential(acmeCredentialId);
             } else {
                 // user details
                 userRegistrationCredentialId = req.body.object_id;
@@ -132,7 +124,7 @@ app.post('/webhook', async function (req, res) {
             // TODO package this stuff up into platform-specific modules
             console.log("Proof received; proof data = ", proof["proof"]);
 
-            connectionId = proof["proof"]["Login Verification"]["attributes"]["Capena Access Token"];
+            connectionId = proof["proof"]["Login Verification"]["attributes"]["Acme Access Token"];
 
             // verify that the connection record exists for this id
             let connectionContract;
@@ -169,9 +161,9 @@ app.post('/webhook', async function (req, res) {
                 issuedCredentialsForThisUser.forEach(credential => {
                     if (credential.values.Platform === "etsy") {
                         etsyCredentialId = credential.credentialId;
-                    } else if (credential.values.Platform === "ebay") {
-                        console.log("-> Setting ebayCredentialId to ", credential.credentialId);
-                        ebayCredentialId = credential.credentialId;
+                    } else if (credential.values.Platform === "acme") {
+                        console.log("-> Setting acmeCredentialId to ", credential.credentialId);
+                        acmeCredentialId = credential.credentialId;
                     } else if (credential.values.Platform === "uber") {
                         console.log("-> Setting uberCredentialId to ", credential.credentialId);
                         uberCredentialId = credential.credentialId;
@@ -197,7 +189,9 @@ app.post('/webhook', async function (req, res) {
 //FRONTEND ENDPOINTS
 
 app.post('/api/acme/issue', cors(), async function (req, res) {
-    console.log("IN /api/acme/issue");
+
+    console.log("IN /api/acme/issue: attributes = ", req.body);
+    platform = "acme";
     if (connectionId) {
         var params =
         {
@@ -205,10 +199,10 @@ app.post('/api/acme/issue', cors(), async function (req, res) {
                 definitionId: process.env.POLICY_ID,
                 connectionId: connectionId,
                 credentialValues: {
-                    "Policy ID": "policyId",
-                    "Effective Date": req.body["name"],
-                    "Expiry Date": req.body["feedbackscore"],
-                    "Insurance Company": req.body["registrationdate"],
+                    "Policy ID": req.body["policyID"],
+                    "Effective Date": req.body["effectiveDate"],
+                    "Expiry Date": req.body["expiryDate"],
+                    "Insurance Company": req.body["insuranceCompany"],
                 }
             }
         }
@@ -222,64 +216,6 @@ app.post('/api/acme/issue', cors(), async function (req, res) {
 });
 
 
-
-app.post('/api/uber/issue', cors(), async function (req, res) {
-    console.log("IN /api/uber/issue");
-    platform = "uber";
-    if (connectionId) {
-        const d = new Date();
-        var params =
-        {
-            credentialOfferParameters: {
-                definitionId: process.env.CRED_DEF_ID_UBER,
-                connectionId: connectionId,
-                credentialValues: {
-                    "Platform": "uber",
-                    "Driver Name": req.body["driver"],
-                    "Driver Rating": req.body["rating"],
-                    "Activation Status": req.body["status"],
-                    "Trip Count": req.body["tripcount"],
-                    "Created At": d.toISOString()
-                }
-            }
-        }
-        console.log("issue UBER credential with connection id " + connectionId + " params = ", params);
-        await client.createCredential(params);
-        console.log("----------------------> CREDENTIAL CREATED!");
-        res.status(200).send();
-    } else {
-        res.status(500).send("Not connected");
-    }
-});
-
-app.post('/api/etsy/issue', cors(), async function (req, res) {
-    console.log("IN /api/etsy/issue");
-    platform = "etsy";
-    if (connectionId) {
-        const d = new Date();
-        var params =
-        {
-            credentialOfferParameters: {
-                definitionId: process.env.CRED_DEF_ID_ETSY,
-                connectionId: connectionId,
-                credentialValues: {
-                    "Platform": "etsy",
-                    "User Name": req.body["name"],
-                    "Feedback Score": req.body["feedbackcount"],
-                    "Registration Date": req.body["registrationdate"],
-                    "Positive Feedback Percent": req.body["posfeedbackpercent"],
-                    "Created At": d.toISOString()
-                }
-            }
-        }
-        console.log("issue ETSY credential with connection id " + connectionId + " params = ", params);
-        await client.createCredential(params);
-        console.log("----------------------> CREDENTIAL CREATED!");
-        res.status(200).send();
-    } else {
-        res.status(500).send("Not connected");
-    }
-});
 
 async function findClientConnection(connectionId) {
     return await client.getConnection(connectionId);
@@ -301,7 +237,6 @@ async function getConnectionWithTimeout(connectionId) {
             return res;
         });
 }
-
 
 app.post('/api/login', cors(), async function (req, res) {
     // send connectionless proof request for user registration details
@@ -338,59 +273,23 @@ app.post('/api/register', cors(), async function (req, res) {
     res.status(200).send({ invite_url: invite.invitation });
 });
 
-app.post('/api/ebay/revoke', cors(), async function (req, res) {
-    console.log("revoking ebay credential, id = ", ebayCredentialId);
-    await client.revokeCredential(ebayCredentialId);
-    console.log("EBAY Credential revoked!");
+app.post('/api/acme/revoke', cors(), async function (req, res) {
+    console.log("revoking acme credential, id = ", acmeCredentialId);
+    await client.revokeCredential(acmeCredentialId);
+    console.log("ACME Credential revoked!");
 
     console.log("++++ SEND MESSAGE WITH CONNECTION ID ", connectionId);
     const params =
     {
         basicMessageParameters: {
             "connectionId": connectionId,
-            "text": "Ebay credential has been revoked. You may want to delete this from your wallet."
+            "text": "Acme credential has been revoked. You may want to delete this from your wallet."
         }
     };
     const resp = await client.sendMessage(params);
 
     console.log("------- Message sent to user's agent !");
 
-    res.status(200).send();
-});
-
-app.post('/api/etsy/revoke', cors(), async function (req, res) {
-    console.log("revoking credential, id = ", etsyCredentialId);
-    await client.revokeCredential(etsyCredentialId);
-    console.log("ETSY Credential revoked!");
-
-    const params =
-    {
-        basicMessageParameters: {
-            "connectionId": connectionId,
-            "text": "Etsy credential has been revoked. You may want to delete this from your wallet."
-        }
-    };
-    const resp = await client.sendMessage(params);
-
-    console.log("------- Message sent to user's agent !");
-    res.status(200).send();
-});
-
-app.post('/api/uber/revoke', cors(), async function (req, res) {
-    console.log("revoking credential, id = ", uberCredentialId);
-    await client.revokeCredential(uberCredentialId);
-    console.log("UBER Credential revoked!");
-
-    const params =
-    {
-        basicMessageParameters: {
-            "connectionId": connectionId,
-            "text": "Uber credential has been revoked. You may want to delete this from your wallet."
-        }
-    };
-    const resp = await client.sendMessage(params);
-
-    console.log("------- Message sent to user's agent !");
     res.status(200).send();
 });
 
@@ -405,9 +304,9 @@ app.post('/api/credential_accepted', cors(), async function (req, res) {
     console.log("Waiting for credential to be accepted...");
     await utils.until(_ => credentialAccepted === true);
     credentialAccepted = false;
+    console.log("---------------------> SENDING CREDENTIAL ACCEPTED BACK TO CLIENT...")
     res.status(200).send();
 });
-
 
 
 const getInvite = async (id) => {
@@ -418,13 +317,6 @@ const getInvite = async (id) => {
                 multiParty: false
             }
         });
-        // const getInvite = async () => {
-        // try {
-        //   let result = await client.createConnection({ connectionInvitationParameters: {} });
-        // } catch (e) {
-        //   console.log(e.message || e.toString());
-        // }
-        //   }
         console.log(">>>>>>>>>>>> INVITE = ", result);
         return result;
     } catch (e) {
@@ -433,7 +325,6 @@ const getInvite = async (id) => {
 }
 
 // for graceful closing
-// var server = https.createServer(certOptions, app);
 var server = https.createServer(certOptions, app);
 async function onSignal() {
     var webhookId = cache.get("webhookId");
@@ -448,8 +339,6 @@ createTerminus(server, {
 
 const PORT = process.env.PORT || 3002;
 var server = server.listen(PORT, async function () {
-    // const url_val = await ngrok.connect(PORT);
-    // console.log("============= \n\n" + url_val + "\n\n =========");
 
     try {
         const url_val = process.env.NGROK_URL + "/webhook";

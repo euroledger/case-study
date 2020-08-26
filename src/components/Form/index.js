@@ -4,88 +4,41 @@ import Typography from "@material-ui/core/es/Typography/Typography";
 import { TextField } from "@material-ui/core";
 import Spinner from '../Spinner';
 
-
-const Form = ({ parent, items, loading, card, title, platform }) => {
+const Form = ({ parent, items, loading, card, title, action }) => {
     const getButton = () => {
-        if (platform === "stackoverflow") {
-            return parent.stackoverflowbutton();
-        } else if (platform === "ebay") {
-            return parent.button();
-        } else if (platform === "etsy") {
-            return parent.etsybutton();
-        } else if (platform === "uber") {
-            return parent.uberbutton();
-        } else if (platform === "amazon") {
-            return parent.amazonbutton();
-        } else if (platform === "upwork") {
-            return parent.upworkbutton();
-        } else if (platform === "facebook") {
-            return parent.facebookbutton();
-        } else if (platform === "linkedin") {
-            return parent.linkedinbutton();
-        } else if (platform === "twitter") {
-            return parent.twitterbutton()
-        }
+        if (action === "policy") {
+            return parent.issuePolicyButton();
+        } else if (action === "claim") {
+            return parent.claimButton();
+        } 
     }
 
     const getLogo = () => {
-        if (platform === "ebay") {
+        if (action === "policy") {
             return (
-                <img style={{ marginLeft: '127px', height: '114px', width: '157px', marginBottom:'40px' }} src='wellness.jpg' alt=""/>
+                <img style={{ marginLeft: '127px', height: '99px', width: '143px', marginBottom:'24px' }} src='wellness.jpg' alt=""/>
             )
-        } else if (platform === "etsy") {
+        } else if (action === "claim") {
             return (
-                <img style={{ marginLeft: '193px', height: '60px', width: '120px' }} src='etsy.png' alt=""/>
+                <img style={{ marginLeft: '288px', height: '90px', width: '155px' }} src='claim.jpg' alt=""/>
             )
-        } else if (platform === "uber") {
-            return (
-                <img style={{ float: 'right', marginLeft: '179px', marginTop: '-45px', height: '128px', width: '120px' }} src='uber2.png' alt=""/>
-            )
-        } else if (platform === "amazon") {
-            return (
-                <img style={{ float: 'right', marginLeft: '143px', marginTop: '-45px', height: '128px', width: '120px' }} src='amazon3.png' alt=""/>
-            )
-        } else if (platform === "upwork") {
-            return (
-                <img style={{ float: 'right', marginLeft: '143px', marginTop: '-45px', height: '104px', width: '132px' }} src='upwork2.png' alt=""/>
-            )
-        } else if (platform === "twitter") {
-            return (
-                <img style={{ float: 'right', marginLeft: '143px', marginTop: '-14px', height: '51px', width: '120px' }} src='twitter.png' alt=""/>
-            )
-        }else if (platform === "facebook") {
-            return (
-                <img style={{ float: 'right', marginLeft: '143px', marginTop: '-14px', height: '86px', width: '193px' }} src='facebook.png' alt=""/>
-            )
-        }else if (platform === "linkedin") {
-            return (
-                <img style={{ float: 'right', marginLeft: '143px', marginTop: '-39px', height: '117px', width: '120px' }} src='linkedin.png' alt=""/>
-            )
-        }else if (platform === "stackoverflow") {
-            return (
-                <img style={{ float: 'right', marginLeft: '72px', marginTop: '-14px', height: '51px', width: '120px' }} src='stackoverflow.png' alt=""/>
-            )
-        }
+        } 
     }
 
     const getDivStyle = () => {
-        if (platform === "ebay") {
+        if (action === "policy") {
             return ({ display: 'flex', marginBottom: '-65px' })
-        } else if (platform === "etsy") {
+        } else if (action === "claim") {
             return ({ display: 'flex', marginBottom: '-3px' })
-        } else if (platform === "uber") {
-            return ({ display: 'flex', marginBottom: '-40px' })
         }
     }
 
     const setFieldValue = (event) => {
-        if (platform === "ebay") {
-            parent.setEbayFieldValue(event);
-        } else if (platform === "etsy") {
-            parent.setEtsyFieldValue(event);
-        } else if (platform === "uber") {
-            parent.setUberFieldValue(event);
-        }
+        if (action === "policy") {
+            parent.setPolicyFieldValue(event);
+        } else if (action === "claim") {
+            parent.setClaimFieldValue(event);
+        } 
     }
 
     return (
