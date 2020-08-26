@@ -16,7 +16,7 @@ const NavBar = ({ parent }) => {
 
     return (
         <AppBar position="static">
-            <Toolbar style={{ backgroundColor: '#6666ff' }}>
+            <Toolbar style={{ backgroundColor: '#336699' }}>
                 <img style = {{maxHeight: '40px', paddingRight: '30px'}} src="acme2.png" alt="logo" />
                 <Typography variant="h6">
                     Acme Insurance Demo
