@@ -1,0 +1,12 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    min-width: 100vw;
+    /* font-family: 'Architects Daughter', cursive; */
+    font-family: 'Josefin Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-stroke: 1px transparent;
+  }
+
