@@ -216,6 +216,8 @@ Follow the same procedure as for Acme registration.
         width="800"
         height="500"/>
 
+- Click Accept to present the credential to the agent which requested it, in this case St Elsewhere Hospital.
+
 # Issue Invoice
 
 - To issue a hospital invoice certificate for the treatment provided to the user, click on "Issue Invoice Credential". Note that this feature is disabled until the hospital has received a valid insurance policy credential from the user.
@@ -226,3 +228,14 @@ Follow the same procedure as for Acme registration.
         width="800"
         height="500"/>
 
+# Acme Request Invoice
+
+- The final step in the workflow is for Acme Insurance to request the hospital invoice. This process is inititated by the user - on the Acme website - requesting the invoice by clicking the button "Request Hospital Invoice".
+
+    <img src="assets/phone-8.png"
+        alt="RequestInvoice"
+        style="padding-top: 20px; padding-bottom: 20px" 
+        width="800"
+        height="500"/>
+
+- Press "Accept" on the wallet (phone) to present the invoice. The form is filled in wit the values from the invoice as shown in the above screenshot.
