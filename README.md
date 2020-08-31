@@ -167,17 +167,17 @@ Note that the ngrok service is only needed in dev to allow webhook events to be 
 
 - The first thing to do is register. Click on the toolbar link and fill out the form:
 
-  <img src="assets/registerscreen.png"
+  <img src="assets/acme-2.png"
         alt="Organizations"
         style="padding-top: 20px; padding-bottom: 20px" 
         width="700"
         height="400"/>
 
-- If you're using the Streetcred Wallet, make sure your agent is configured to the Sovrin Staging network 
+- To use the Trinsic Wallet, make sure your agent is configured to the Sovrin Staging network 
 
 - When you click "Register" a QR Code is displayed. This is the invite to connect. Scan the QR with your mobile wallet
 
-    <img src="assets/qrcode.png"
+    <img src="assets/phone-1.png"
         alt="Organizations"
         style="padding-top: 20px; padding-bottom: 20px" 
         width="600"
@@ -187,15 +187,32 @@ This is a connection invitation. Webhooks will automatically issue the User Deta
 
 - Accept the credential offer
 
-- The User (Registration) credentials will be issued (along with an auto generated passcode)
-
-Once this is done, eBay and Etsy credentials can be imported and then issued to the user wallet. 
+- The User (Registration) credentials will be issued (along with an auto generated access token) 
 
 To login, a QR Code will be issued 
 
 
-### Issuing and Revoking Credentials
+### Issuing a Policy Credential
 
-To load user data from platforms select the platform and click on "Import User Reputation Data". You will be asked to sign in to that platfom.
+To create a new policy fill out the new policy form details and click "Issue Credential". The phone wallet will ask you to accept or decline the credential. Click on Accept.
 
-Once the data are loaded you can then Issue and Revoke credentials. On each occasion you will be asked to confirm or decline this on the mobile wallet app.
+    <img src="assets/phone-2.png"
+        alt="New Policy"
+        style="padding-top: 20px; padding-bottom: 20px" 
+        width="600"
+        height="340"/>
+
+# St Elsewhere Hospital Registration
+
+Follow the same procedure as for Acme registration.
+
+# Request Insurance Policy
+
+Click on "Request Insurance Policy". The user wallet display the proof request and the fields/values requested as shown here:
+
+    <img src="assets/phone-5.png"
+        alt="New Policy"
+        style="padding-top: 20px; padding-bottom: 20px" 
+        width="600"
+        height="340"/>
+
