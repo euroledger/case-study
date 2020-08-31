@@ -180,8 +180,8 @@ Note that the ngrok service is only needed in dev to allow webhook events to be 
     <img src="assets/phone-1.png"
         alt="Organizations"
         style="padding-top: 20px; padding-bottom: 20px" 
-        width="600"
-        height="340"/>
+        width="800"
+        height="500"/>
 
 This is a connection invitation. Webhooks will automatically issue the User Details credential once this is scanned
 
@@ -194,7 +194,7 @@ To login, a QR Code will be issued
 
 ### Issuing a Policy Credential
 
-To create a new policy fill out the new policy form details and click "Issue Credential". The phone wallet will ask you to accept or decline the credential. Click on Accept.
+- To create a new policy fill out the new policy form details and click "Issue Credential". The phone wallet will ask you to accept or decline the credential. Click on Accept.
 
     <img src="assets/phone-2.png"
         alt="New Policy"
@@ -208,10 +208,20 @@ Follow the same procedure as for Acme registration.
 
 # Request Insurance Policy
 
-Click on "Request Insurance Policy". The user wallet display the proof request and the fields/values requested as shown here:
+- Click on "Request Insurance Policy". The user wallet display the proof request and the fields/values requested as shown here:
 
     <img src="assets/phone-5.png"
-        alt="New Policy"
+        alt="Request Policy"
+        style="padding-top: 20px; padding-bottom: 20px" 
+        width="600"
+        height="340"/>
+
+# Issue Invoice
+
+- To issue a hospital invoice certificate for the treatment provided to the user, click on "Issue Invoice Credential". Note that this feature is disabled until the hospital has received a valid insurance policy credential from the user.
+
+    <img src="assets/phone-5.png"
+        alt="Raise Invoice"
         style="padding-top: 20px; padding-bottom: 20px" 
         width="600"
         height="340"/>
