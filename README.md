@@ -102,9 +102,7 @@ Then start the service with:
 
 You will see something like
 
-    Forwarding                    http://85b3b019da0a.ngrok.io -> http://localhost:5002                                     Forwarding                    https://85b3b019da0a.ngrok.io -> http://localhost:5002                                    Forwarding                    http://ba28cb436dc9.ngrok.io -> https://localhost:3002                                    Forwarding                    https://ba28cb436dc9.ngrok.io -> https://localhost:3002 
-
-
+`Forwarding                    http://85b3b019da0a.ngrok.io -> http://localhost:5002                       Forwarding                    https://85b3b019da0a.ngrok.io -> http://localhost:5002                                    Forwarding                    http://ba28cb436dc9.ngrok.io -> https://localhost:3002                                    Forwarding                    https://ba28cb436dc9.ngrok.io -> https://localhost:3002` 
 
 
 In the .env file for acme change the NGROK key as follows:
@@ -126,29 +124,43 @@ Note that the ngrok service is only needed in dev to allow webhook events to be 
 
 ## Steps to run the two servers
 
-### Prepare issuer portal
+### ACME
  1. clone the repository
- `git clone https://github.com/euroledger/capena-delega.git`
+ `https://github.com/euroledger/case-study.git`
  
- 1. navigate into the directory
- `cd capena-delega`
+ 2. navigate into the directory for acme
+ `cd insurance`
  
- 1. install the dependencies
+ 3. install the dependencies
  `npm install .`
 
- 1. Open up the repository in a code editor of your choice
+ 4. Open up the repository in a code editor of your choice
+ `edit the .env file to contain the correct Trinsic keys and ngrok host URLs`
 
+ 5. Run the server with
+ `npm run start`
+
+
+### ST ELSEWHERE
  
-### Running the application
-Assuming everything still works correctly, you are ready to run the application. 
+ 1. navigate into the directory for st elsewhere
+ `cd hospital`
+ 
+ 2. install the dependencies
+ `npm install .`
 
-- Run with npm
-`npm run start`
+ 3. Open up the repository in a code editor of your choice
+ `edit the .env file to contain the correct Trinsic keys and ngrok host URLs`
 
-- The main screen will be displayed:
+ 4. Run the server with
+ `npm run start`
 
-    <img src="assets/main.png"
-        alt="Organizations"
+# Running Acme
+
+- Once the acme web server has initialised the main Acme screen will be displayed:
+
+    <img src="assets/acme-1.png"
+        alt="Acme Main"
         style="padding-top: 20px; padding-bottom: 20px" 
         width="600"
         height="400"/>
