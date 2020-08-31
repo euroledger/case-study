@@ -11,6 +11,9 @@ const GlobalCss = withStyles({
         },
         '.MuiTab-wrapper': {
             color: 'white'
+        },
+        '.MuiInputBase-input': {
+            color: 'gray'
         }
     }
 

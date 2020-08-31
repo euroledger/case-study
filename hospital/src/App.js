@@ -20,7 +20,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import axios from 'axios';
 import QRcode from 'qrcode.react';
 import crypto from 'crypto';
-import acmeRoutes from './routes/acme';
+import hospitalRoutes from './routes/hospital';
 import signInRoutes from './routes/signInRoutes';
 
 axios.defaults.baseURL = 'http://localhost:5002/';
@@ -52,7 +52,7 @@ const initState = {
         hospitalName: "St Elsewhere Hospital, Gotham City",
         invoiceDate: "",
         insurancePolicyNumber: "",
-        amount: "",
+        invoiceAmount: "",
         treatmentDescription: ""
     },
 
@@ -70,7 +70,8 @@ const initState = {
         verification_accepted: true,
         has_been_revoked: true,
         loading: false,
-        insurance_policy_received: true
+        insurance_policy_received: true,
+        claim_button_disabled: true
     },
 
     register: false,
@@ -100,13 +101,13 @@ export class App extends Component {
         });
     }
 
-    onIssue = async () => {
+    onIssueInvoice = async () => {
         const invoiceDetails = {
             invoiceNumber: invoiceNumber,
             hospitalName: this.state.invoice.hospitalName,
             invoiceDate: this.state.invoice.invoiceDate,
-            insurancePolicyNumber: this.state.policyID,
-            amount: this.state.invoice.amount,
+            insurancePolicyNumber: this.state.invoice.insurancePolicyNumber,
+            amount: this.state.invoice.invoiceAmount + ".00",
             treatmentDescription: this.state.invoice.treatmentDescription
         }
 
@@ -114,7 +115,7 @@ export class App extends Component {
             acme: { ...prevState.acme, credential_accepted: false }
         }));
 
-        await acmeRoutes.issue(invoiceDetails);
+        await hospitalRoutes.issue(invoiceDetails);
 
         this.setState(prevState => ({
             acme: { ...prevState.acme, credential_accepted: true, has_been_revoked: false },
@@ -128,13 +129,13 @@ export class App extends Component {
         }));
         let resp;
         try {
-            resp = await acmeRoutes.verifyInsurance();
+            resp = await hospitalRoutes.verifyInsurance();
         }
         catch (e) {
             console.log(e);
         }
         this.setState(prevState => ({
-            acme: { ...prevState.acme, insurance_policy_received: true },
+            acme: { ...prevState.acme, insurance_policy_received: true, claim_button_disabled: false },
             policy: {...prevState.policy, 
                 policyID: resp.data.policyID,
                 effectiveDate: resp.data.effectiveDate,
@@ -245,7 +246,6 @@ export class App extends Component {
             console.log("Connection  = ", login.data);
             const name = login.data.connectionContract.name;
 
-            console.log("QUACK >>> login name = ", name);
             this.setState({
                 login: true, connection_name: name, register: true, loggingIn: false
             });
@@ -332,7 +332,7 @@ export class App extends Component {
 
     acmeGetUserData = async () => {
         console.log("Waiting for the feedback to arrive...");
-        const user = await acmeRoutes.getFeedback();
+        const user = await hospitalRoutes.getFeedback();
 
         console.log("User Data = ", user.data);
 
@@ -364,7 +364,7 @@ export class App extends Component {
     }
 
     getCancelInvoiceLabel(platform) {
-        return (this.state[platform].credential_accepted ? "Cancel Invoice" : "Awaiting Acceptance...");
+        return (this.state.acme.credential_accepted ? "Cancel Invoice" : "Awaiting Acceptance...");
     }
 
     getPolicyLabel() {
@@ -377,6 +377,10 @@ export class App extends Component {
 
     getDisabled(platform) {
         return (!this.state[platform].credential_accepted || !(this.state.acme.insurance_policy_received));
+    }
+
+    getClaimDisabled(platform) {
+        return (!this.state[platform].credential_accepted || !(this.state.acme.insurance_policy_received) || (this.state.acme.claim_button_disabled));
     }
 
     requestPolicyButton() {
@@ -394,8 +398,8 @@ export class App extends Component {
         if (this.state.acme.has_been_revoked) {
             return (
                 <div style={{ marginTop: '45px', marginBottom: '20px' }}>
-                    <Button className="registerbutton" disabled={this.getDisabled("acme")}
-                        onClick={() => this.onRequestCertificate()} >
+                    <Button className="registerbutton" disabled={this.getClaimDisabled("acme")}
+                        onClick={() => this.onIssueInvoice()} >
                         {this.getInvoiceLabel()}
                     </Button>
                 </div>
@@ -413,7 +417,7 @@ export class App extends Component {
     }
 
     getQRCodeLabel() {
-        return this.state.registering ? "Scan this QR code to Register with Capena" : "Scan this QR code to Login"
+        return this.state.registering ? "Scan this QR code to Register with St.Elsewhere Hospital" : "Scan this QR code to Login"
     }
 
     handleLoginClose() {
@@ -496,13 +500,13 @@ export class App extends Component {
             };
         }
 
-        // const getTabDisplay = () => {
-        //     return this.state.welcome_open ? 'none' : 'block';
-        // }
-
         const getTabDisplay = () => {
-            return this.state.welcome_open ? 'block' : 'none';
+            return this.state.welcome_open ? 'none' : 'block';
         }
+
+        // const getTabDisplay = () => {
+        //     return this.state.welcome_open ? 'block' : 'none';
+        // }
 
         return (
             <ThemeProvider muiTheme={muiTheme}>

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const signInRoutes = {
     async register(registrationInfo) {
-        console.log("QUACK...register user");
+        console.log("----> register user");
         return await axios.post('/api/register', registrationInfo);
     },
     async waitForConnection() {

@@ -31,16 +31,12 @@ app.use(cors());
 app.use(parser.json());
 app.use(express.static(path.join(__dirname, 'build')))
 
-// add in routes from the two platforms eBay and Etsy
-require('./routes/ebay')(app)
-require('./routes/etsy')(app);
-
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-let acmeCredentialId;
-let connectionId = '7d0730ab95158416419f0435ad28475086085495';
+let hospitalCredentialId;
+let connectionId;
 let registered = false;
 let loginConfirmed = false;
 let credentialAccepted = false;
@@ -96,10 +92,10 @@ app.post('/webhook', async function (req, res) {
             // if (connected) {
             console.log("IMPORTANT platform = ", platform);
 
-            if (platform === "acme") {
-                acmeCredentialId = req.body.object_id;
-                console.log("Issuing acme credential to wallet, id = ", acmeCredentialId);
-                await client.issueCredential(acmeCredentialId);
+            if (platform === "hospital") {
+                hospitalCredentialId = req.body.object_id;
+                console.log("Issuing hospital invoice credential to wallet, id = ", hospitalCredentialId);
+                await client.issueCredential(hospitalCredentialId);
             } else {
                 // user details
                 userRegistrationCredentialId = req.body.object_id;
@@ -118,18 +114,10 @@ app.post('/webhook', async function (req, res) {
 
             let proof = await client.getVerification(req.body.object_id);
 
-            // const data = proof["proof"]["eBay Seller Proof"]["attributes"];
-
-            // TODO package this stuff up into platform-specific modules
             console.log("Proof received; proof data = ", proof["proof"]);
-
 
             if (platform === "hospital") {
                 const data = proof["proof"]["Proof of Insurance"]["attributes"];
-                // 'Expiry Date': '2021-08-27',
-                // 'Insurance Company': 'Acme',
-                // 'Policy ID': '42782679',
-                // 'Effective Date': '2020-08-27'
                 verifyRecord = {
                     policyID: data["Policy ID"],
                     expiryDate: data["Expiry Date"],
@@ -176,15 +164,9 @@ app.post('/webhook', async function (req, res) {
                     }
                     // save the credential IDs of previously issued credentials -> these can be used for revocation
                     issuedCredentialsForThisUser.forEach(credential => {
-                        if (credential.values.Platform === "etsy") {
-                            etsyCredentialId = credential.credentialId;
-                        } else if (credential.values.Platform === "acme") {
-                            console.log("-> Setting acmeCredentialId to ", credential.credentialId);
-                            acmeCredentialId = credential.credentialId;
-                        } else if (credential.values.Platform === "uber") {
-                            console.log("-> Setting uberCredentialId to ", credential.credentialId);
-                            uberCredentialId = credential.credentialId;
-                        }
+                        if (credential.values.Platform === "hospital") {
+                            hospitalCredentialId = credential.credentialId;
+                        } 
                     });
                     loginConfirmed = true;
                     // res.status(200).send(connectionAndCredentials);
@@ -206,21 +188,22 @@ app.post('/webhook', async function (req, res) {
 
 //FRONTEND ENDPOINTS
 
-app.post('/api/acme/issue', cors(), async function (req, res) {
-
-    console.log("IN /api/acme/issue: attributes = ", req.body);
-    platform = "acme";
+app.post('/api/hospital/issue', cors(), async function (req, res) {
+    console.log("IN /api/hospital/issue: attributes = ", req.body);
+    platform = "hospital";
     if (connectionId) {
         var params =
         {
             credentialOfferParameters: {
-                definitionId: process.env.POLICY_ID,
+                definitionId: process.env.INVOICE_ID,
                 connectionId: connectionId,
                 credentialValues: {
-                    "Policy ID": req.body["policyID"],
-                    "Effective Date": req.body["effectiveDate"],
-                    "Expiry Date": req.body["expiryDate"],
-                    "Insurance Company": req.body["insuranceCompany"],
+                    "Invoice Number":  req.body["invoiceNumber"],
+                    "Hospital Name": req.body["hospitalName"],
+                    "Invoice Date": req.body["invoiceDate"],
+                    "Insurance Policy Number": req.body["insurancePolicyNumber"],
+                    "Amount": req.body["amount"],
+                    "Treatment Description": req.body["treatmentDescription"],
                 }
             }
         }
@@ -330,8 +313,8 @@ app.post('/api/register', cors(), async function (req, res) {
 });
 
 app.post('/api/acme/revoke', cors(), async function (req, res) {
-    console.log("revoking acme credential, id = ", acmeCredentialId);
-    await client.revokeCredential(acmeCredentialId);
+    console.log("revoking acme credential, id = ", hospitalCredentialId);
+    await client.revokeCredential(hospitalCredentialId);
     console.log("ACME Credential revoked!");
 
     console.log("++++ SEND MESSAGE WITH CONNECTION ID ", connectionId);

@@ -1,11 +1,4 @@
 const invoiceItems = [
-
-    // invoiceNumber: "",
-    // hospitalName: "St Elsewhere",
-    // invoiceDate: "",
-    // insurancePolicyNumber: "",
-    // amount: "",
-    // treatmentDescription: ""
     {
         id: "invoiceNumber",
         label: "Invoice Number",

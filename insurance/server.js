@@ -1,4 +1,4 @@
-const http = require('http');
+// const http = require('http');
 const parser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
@@ -31,9 +31,6 @@ app.use(cors());
 app.use(parser.json());
 app.use(express.static(path.join(__dirname, 'build')))
 
-// add in routes from the two platforms eBay and Etsy
-require('./routes/ebay')(app)
-require('./routes/etsy')(app);
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '/build/index.html'));
@@ -112,68 +109,80 @@ app.post('/webhook', async function (req, res) {
         }
         else if (req.body.message_type === 'verification') {
             console.log("cred verificatation notif");
-            verificationAccepted = true;
+
             console.log(req.body);
 
             console.log("Getting verification attributes with verification id of ", req.body.object_id);
 
             let proof = await client.getVerification(req.body.object_id);
 
-            // const data = proof["proof"]["eBay Seller Proof"]["attributes"];
-
-            // TODO package this stuff up into platform-specific modules
             console.log("Proof received; proof data = ", proof["proof"]);
 
-            connectionId = proof["proof"]["Login Verification"]["attributes"]["Acme Access Token"];
+            if (platform === "acme") {
+                const data = proof["proof"]["Proof of Invoice"]["attributes"];
 
-            // verify that the connection record exists for this id
-            let connectionContract;
-            try {
-                connectionContract = await getConnectionWithTimeout(connectionId);
-            } catch (e) {
-                console.log(e.message || e.toString());
-                res.status(500).send("connection record not found for id " + connectionId);
-            }
+                verifyRecord = {
+                    invoiceNumber: data["Invoice Number"],
+                    hospitalName: data["Hospital Name"],
+                    invoiceDate: data["Invoice Date"],
+                    insurancePolicyNumber: data["Insurance Policy Number"],
+                    invoiceAmount: data["Amount"],
+                    treatmentDescription: data["Treatment Description"]
+                };
 
-            if (connectionContract) {
-                console.log("connectionContract = ", connectionContract);
+                verificationAccepted = true;
 
-                console.log("---------------- GET ALL CREDENTIALS -------------------");
-
-                // retreive all credentials for this id
-                let credentials = await client.listCredentials();
-                var issuedCredentialsForThisConnection = credentials.filter(function (credential) {
-                    return credential.connectionId === connectionId;
-                });
-                console.log(issuedCredentialsForThisConnection)
-
-                var issuedCredentialsForThisUser = credentials.filter(function (credential) {
-                    return credential.state === "Issued" && credential.connectionId === connectionId;
-                });
-
-                // console.log(issuedCredentialsForThisUser);
-
-                connectionAndCredentials = {
-                    connectionContract: connectionContract,
-                    credentials: issuedCredentialsForThisUser
-                }
-                // save the credential IDs of previously issued credentials -> these can be used for revocation
-                issuedCredentialsForThisUser.forEach(credential => {
-                    if (credential.values.Platform === "etsy") {
-                        etsyCredentialId = credential.credentialId;
-                    } else if (credential.values.Platform === "acme") {
-                        console.log("-> Setting acmeCredentialId to ", credential.credentialId);
-                        acmeCredentialId = credential.credentialId;
-                    } else if (credential.values.Platform === "uber") {
-                        console.log("-> Setting uberCredentialId to ", credential.credentialId);
-                        uberCredentialId = credential.credentialId;
-                    }
-                });
-                loginConfirmed = true;
-                // res.status(200).send(connectionAndCredentials);
+                console.log(verifyRecord);
             } else {
-                console.log("connection record not found for id ", connectionId);
-                res.status(500);
+
+                connectionId = proof["proof"]["Login Verification"]["attributes"]["Acme Access Token"];
+
+                // verify that the connection record exists for this id
+                let connectionContract;
+                try {
+                    connectionContract = await getConnectionWithTimeout(connectionId);
+                } catch (e) {
+                    console.log(e.message || e.toString());
+                    res.status(500).send("connection record not found for id " + connectionId);
+                }
+
+                if (connectionContract) {
+                    console.log("connectionContract = ", connectionContract);
+
+                    console.log("---------------- GET ALL CREDENTIALS -------------------");
+
+                    // retreive all credentials for this id
+                    let credentials = await client.listCredentials();
+                    var issuedCredentialsForThisConnection = credentials.filter(function (credential) {
+                        return credential.connectionId === connectionId;
+                    });
+                    console.log(issuedCredentialsForThisConnection)
+
+                    var issuedCredentialsForThisUser = credentials.filter(function (credential) {
+                        return credential.state === "Issued" && credential.connectionId === connectionId;
+                    });
+
+                    // console.log(issuedCredentialsForThisUser);
+
+                    connectionAndCredentials = {
+                        connectionContract: connectionContract,
+                        credentials: issuedCredentialsForThisUser
+                    }
+                    // save the credential IDs of previously issued credentials -> these can be used for revocation
+                    issuedCredentialsForThisUser.forEach(credential => {
+                        if (credential.values.Platform === "acme") {
+                            console.log("-> Setting acmeCredentialId to ", credential.credentialId);
+                            acmeCredentialId = credential.credentialId;
+                        }
+                    });
+                    verificationAccepted = true;
+                    loginConfirmed = true;
+                    // res.status(200).send(connectionAndCredentials);
+
+                } else {
+                    console.log("connection record not found for id ", connectionId);
+                    res.status(500);
+                }
             }
         } else {
             console.log("WEBHOOK message_type = ", req.body.message_type);
@@ -215,6 +224,44 @@ app.post('/api/acme/issue', cors(), async function (req, res) {
     }
 });
 
+app.post('/api/verifyinvoice', cors(), async function (req, res) {
+    platform = "acme";
+    verificationAccepted = false;
+    const d = new Date();
+    const params =
+    {
+        verificationPolicyParameters: {
+            "name": "Proof of Invoice",
+            "version": "1.0",
+            "attributes": [
+                {
+                    "policyName": "Proof of Invoice",
+                    "attributeNames": [
+                        "Invoice Number",
+                        "Hospital Name",
+                        "Invoice Date",
+                        "Insurance Policy Number",
+                        "Amount",
+                        "Treatment Description"
+
+                    ],
+                    "restrictions": null
+                }
+            ],
+            "predicates": []
+        }
+    }
+    console.log("send verification request, connectionId = ", connectionId, "; params = ", params);
+    const resp = await client.sendVerificationFromParameters(connectionId, params);
+    res.status(200).send();
+});
+
+app.get('/api/verificationreceived', cors(), async function (req, res) {
+    console.log("Waiting for verification...");
+    await utils.until(_ => verificationAccepted === true);
+
+    res.status(200).send(verifyRecord);
+});
 
 
 async function findClientConnection(connectionId) {
@@ -341,7 +388,7 @@ var server = server.listen(PORT, async function () {
 
     try {
         const url_val = process.env.NGROK_URL + "/webhook";
-        
+
         console.log("Using ngrok (webhook) url of ", url_val);
         var response = await client.createWebhook({
             webhookParameters: {

@@ -16,8 +16,6 @@
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
-    "ebay-oauth-nodejs-client": "^1.2.0",
-    "etsy-js": "0.0.6",
     "express": "^4.17.1",
     "express-http-proxy": "^1.6.0",
     "express-session": "^1.17.1",

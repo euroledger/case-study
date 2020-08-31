@@ -52,8 +52,12 @@ const initState = {
         socialSecurityNumber: ""
     },
     claim: {
-        policyID: "",
-        CustomerName: ""
+        invoiceNumber: "",
+        hospitalName: "",
+        invoiceDate: "",
+        insurancePolicyNumber: "",
+        invoiceAmount: "",
+        treatmentDescription: ""
     },
 
     qr_open: false,
@@ -113,21 +117,44 @@ export class App extends Component {
         this.setState(prevState => ({
             acme: { ...prevState.acme, credential_accepted: false }
         }));
-
-        console.log(">>>>>>>>>>>QUACK DOING THE ISSUE...")
         await acmeRoutes.issue(policyDetails);
-
-        console.log(">>>>>>>>>>>>>>>>>QUACK DONE!");
-
         this.setState(prevState => ({
             acme: { ...prevState.acme, credential_accepted: true, has_been_revoked: false },
             policy: { ...prevState.policy, policyID: policyID },
-            claim: { ...prevState.policy, policyID: policyID, customerName: this.state.connection_name }
+            // claim: { ...prevState.policy, policyID: policyID, customerName: this.state.connection_name }
         }));
     }
 
     onRequestCertificate = async () => {
-        // TODO fire a proof request for the hospital certificate
+        // fire a proof request for the hospital certificate
+
+        this.setState(prevState => ({
+            acme: { ...prevState.acme, verification_accepted: false },
+        }));
+
+        let resp;
+        try {
+            console.log("VERIFY INVOICE....");
+            resp = await acmeRoutes.verifyInvoice();
+            console.log("ok! resp = ", resp);
+        }
+        catch (e) {
+            console.log(e);
+            return;
+        }
+
+        this.setState(prevState => ({
+            acme: { ...prevState.acme, hospital_certificate_received: true, verification_accepted: true, claim_button_disabled: false },
+            claim: {...prevState.claim, 
+                invoiceNumber: resp.data.invoiceNumber,
+                hospitalName: resp.data.hospitalName,
+                invoiceDate: resp.data.invoiceDate,
+                insurancePolicyNumber: resp.data.insurancePolicyNumber,
+                invoiceAmount: resp.data.invoiceAmount,
+                treatmentDescription: resp.data.treatmentDescription
+            }
+        }));
+        console.log("ok! resp = ", resp);
     }
 
     setPolicyFieldValue = (event) => {
@@ -218,9 +245,8 @@ export class App extends Component {
             console.log("Connection  = ", login.data);
             const name = login.data.connectionContract.name;
 
-            console.log("QUACK >>> login name = ", name);
             this.setState({
-                login: true, connection_name: name, register: true, loggingIn: false
+                login: true, connection_name: name, register: true, loggingIn: false, welcome_open: false
             });
             sessionStorage.setItem("name", name);
             sessionStorage.setItem("login", true);
@@ -345,7 +371,7 @@ export class App extends Component {
     }
 
     getCertificateLabel() {
-        return (!this.state.acme.hospital_certificate_received ? "Request Hospital Certificate" : "Awaiting Proof...");
+        return (this.state.acme.verification_accepted ? "Request Hospital Invoice" : "Awaiting Proof...");
     }
 
     getAcceptedLabelIssue(platform) {
@@ -353,11 +379,11 @@ export class App extends Component {
     }
 
     getReimburseLabel() {
-        return "Reimburse Customer";
+        return "Submit Claim";
     }
 
     getDisabled(platform) {
-        return (!this.state[platform].credential_accepted);
+        return (!this.state[platform].credential_accepted || !this.state[platform].verification_accepted);
     }
 
     getVerifyDisabled(platform) {
@@ -403,7 +429,7 @@ export class App extends Component {
     }
 
     getQRCodeLabel() {
-        return this.state.registering ? "Scan this QR code to Register with Capena" : "Scan this QR code to Login"
+        return this.state.registering ? "Scan this QR code to Register with Acme Insurance" : "Scan this QR code to Login"
     }
 
     handleLoginClose() {
@@ -495,6 +521,18 @@ export class App extends Component {
             return this.state.acme.credential_accepted ? 'none' : 'block';
         }
 
+        // const getTabDisplay = () => {
+        //     return this.state.welcome_open ? 'block' : 'none';
+        // }
+
+        // const getWelcomeDisplay = () => {
+        //     return this.state.welcome_open ? 'none' : 'block';
+        // }
+
+        // const getWaitingDisplay = () => {
+        //     return this.state.acme.credential_accepted ? 'block' : 'none';
+        // }
+
         return (
             <ThemeProvider muiTheme={muiTheme}>
                 <div >
@@ -534,7 +572,7 @@ export class App extends Component {
                             >
 
                                 <Tab label="New Policy" {...a11yProps(0)} />
-                                <Tab label="Enter Claim" {...a11yProps(1)} />
+                                <Tab label="Enter Claim" {...a11yProps(1) } />
                             </Tabs>
                             <TabPanel value={this.state.value} index={0}>
                                 <Form
