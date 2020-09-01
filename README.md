@@ -100,13 +100,13 @@ Then start the service with:
 
 ./ngrok start -all
 
-- You will see something like
+- You will see something like this (linux screenshot)
 
   <img src="assets/ngrok.png"
         alt="Acme Main"
         style="padding-top: 20px; padding-bottom: 20px" 
-        width="600"
-        height="400"/>
+        width="700"
+        height="300"/>
 
 In the .env file for acme change the NGROK key as follows:
     
