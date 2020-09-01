@@ -4,7 +4,7 @@ This is the case study demo application which allows a user to create a new acco
 
 The insurance certificate credential is a digital representation of a paper insurance certificate, and is proof that the holder of the certificate has a non-revoked insurance policy.
 
-There is a second web application which is a prototype of a hospital website. This site allows the same user as above to request a medical certificate, which represents a proof that the user (patient) has received some medical treatment and the value of that treatment. This user can then request that Acme Insurance request this certificate as proof of treatment received as part of the claims procedure. Once verified, the user is then reimbursed by Acme for medical costs incurred.
+There is a second web application which is a prototype of a hospital website. This site allows the same user as above to issue a medical certificate, which represents a proof that the user (patient) has received some medical treatment and the value of that treatment. This user can then request that this certificate as proof of treatment received as part of the insurance claims procedure. Once verified, the user is then reimbursed by Acme for medical costs incurred.
 
 The SSI agent communication uses the Trinsic API and the User Wallet is the standard Trinsic Phone App.
 
