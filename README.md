@@ -100,10 +100,13 @@ Then start the service with:
 
 ./ngrok start -all
 
-You will see something like
+- You will see something like
 
-`Forwarding                    http://85b3b019da0a.ngrok.io -> http://localhost:5002                       Forwarding                    https://85b3b019da0a.ngrok.io -> http://localhost:5002                                    Forwarding                    http://ba28cb436dc9.ngrok.io -> https://localhost:3002                                    Forwarding                    https://ba28cb436dc9.ngrok.io -> https://localhost:3002` 
-
+  <img src="assets/ngrok.png"
+        alt="Acme Main"
+        style="padding-top: 20px; padding-bottom: 20px" 
+        width="600"
+        height="400"/>
 
 In the .env file for acme change the NGROK key as follows:
     
