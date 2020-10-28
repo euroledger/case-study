@@ -8,18 +8,26 @@ const ngrok = require('ngrok');
 const cache = require('./model');
 const utils = require('./utils');
 
+const debug = require('debug')('tmp:server');
+
+
 
 var fs = require('fs');
-// var https = require('https');
+var https = require('https');
 
 require('dotenv').config();
 
-const { AgencyServiceClient, Credentials } = require("@streetcred.id/service-clients");
+// const { AgencyServiceClient, Credentials } = require("@streetcred.id/service-clients");
 
-const client = new AgencyServiceClient(
-    new Credentials(process.env.ACCESSTOK, process.env.SUBKEY),
+// const client = new AgencyServiceClient(
+//     new Credentials(process.env.ACCESSTOK, process.env.SUBKEY),
+//     { noRetryPolicy: true });
+
+const { CredentialsServiceClient, Credentials } = require("@trinsic/service-clients");
+
+const client = new CredentialsServiceClient(
+    new Credentials(process.env.ACCESSTOK),
     { noRetryPolicy: true });
-
 
 var certOptions = {
     key: fs.readFileSync(path.resolve('./cert/server.key')),
@@ -31,11 +39,12 @@ app.use(cors());
 app.use(parser.json());
 app.use(express.static(path.join(__dirname, 'build')))
 
+
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-let hospitalCredentialId;
+let acmeCredentialId;
 let connectionId;
 let registered = false;
 let loginConfirmed = false;
@@ -69,9 +78,11 @@ app.post('/webhook', async function (req, res) {
             const attribs = cache.get(req.body.object_id);
             console.log("attribs from cache = ", attribs);
             var param_obj = JSON.parse(attribs);
+
+            
             var params =
             {
-                credentialOfferParameters: {
+                // credentialOfferParameters: {
                     definitionId: process.env.CRED_DEF_ID_USER_DETAILS,
                     connectionId: req.body.object_id,
                     credentialValues: {
@@ -80,7 +91,7 @@ app.post('/webhook', async function (req, res) {
                         'Email Address': param_obj["email"],
                         'Country': param_obj["country"],
                         'St Elsewhere Access Token': param_obj["passcode"]
-                    }
+                    // }
                 }
             }
             console.log(">>>>>>>>>>>>> Creating credential with params ", params);
@@ -92,10 +103,10 @@ app.post('/webhook', async function (req, res) {
             // if (connected) {
             console.log("IMPORTANT platform = ", platform);
 
-            if (platform === "hospital") {
-                hospitalCredentialId = req.body.object_id;
-                console.log("Issuing hospital invoice credential to wallet, id = ", hospitalCredentialId);
-                await client.issueCredential(hospitalCredentialId);
+            if (platform === "acme") {
+                acmeCredentialId = req.body.object_id;
+                console.log("Issuing acme credential to wallet, id = ", acmeCredentialId);
+                await client.issueCredential(acmeCredentialId);
             } else {
                 // user details
                 userRegistrationCredentialId = req.body.object_id;
@@ -108,6 +119,7 @@ app.post('/webhook', async function (req, res) {
         }
         else if (req.body.message_type === 'verification') {
             console.log("cred verificatation notif");
+
             console.log(req.body);
 
             console.log("Getting verification attributes with verification id of ", req.body.object_id);
@@ -116,20 +128,24 @@ app.post('/webhook', async function (req, res) {
 
             console.log("Proof received; proof data = ", proof["proof"]);
 
-            if (platform === "hospital") {
-                const data = proof["proof"]["Proof of Insurance"]["attributes"];
+            if (platform === "acme") {
+                const data = proof["proof"]["Proof of Invoice"]["attributes"];
+
                 verifyRecord = {
-                    policyID: data["Policy ID"],
-                    expiryDate: data["Expiry Date"],
-                    effectiveDate: data["Effective Date"],
-                    insuranceCompany: data["Insurance Company"]
+                    invoiceNumber: data["Invoice Number"],
+                    hospitalName: data["Hospital Name"],
+                    invoiceDate: data["Invoice Date"],
+                    insurancePolicyNumber: data["Insurance Policy Number"],
+                    invoiceAmount: data["Amount"],
+                    treatmentDescription: data["Treatment Description"]
                 };
 
                 verificationAccepted = true;
 
                 console.log(verifyRecord);
             } else {
-                connectionId = proof["proof"]["Login Verification"]["attributes"]["St Elsewhere Access Token"];
+
+                connectionId = proof["proof"]["Login Verification"]["attributes"]["Acme Access Token"];
 
                 // verify that the connection record exists for this id
                 let connectionContract;
@@ -139,7 +155,7 @@ app.post('/webhook', async function (req, res) {
                     console.log(e.message || e.toString());
                     res.status(500).send("connection record not found for id " + connectionId);
                 }
-                verificationAccepted = true;
+
                 if (connectionContract) {
                     console.log("connectionContract = ", connectionContract);
 
@@ -164,12 +180,15 @@ app.post('/webhook', async function (req, res) {
                     }
                     // save the credential IDs of previously issued credentials -> these can be used for revocation
                     issuedCredentialsForThisUser.forEach(credential => {
-                        if (credential.values.Platform === "hospital") {
-                            hospitalCredentialId = credential.credentialId;
-                        } 
+                        if (credential.values.Platform === "acme") {
+                            console.log("-> Setting acmeCredentialId to ", credential.credentialId);
+                            acmeCredentialId = credential.credentialId;
+                        }
                     });
+                    verificationAccepted = true;
                     loginConfirmed = true;
                     // res.status(200).send(connectionAndCredentials);
+
                 } else {
                     console.log("connection record not found for id ", connectionId);
                     res.status(500);
@@ -188,22 +207,21 @@ app.post('/webhook', async function (req, res) {
 
 //FRONTEND ENDPOINTS
 
-app.post('/api/hospital/issue', cors(), async function (req, res) {
-    console.log("IN /api/hospital/issue: attributes = ", req.body);
-    platform = "hospital";
+app.post('/api/acme/issue', cors(), async function (req, res) {
+
+    console.log("IN /api/acme/issue: attributes = ", req.body);
+    platform = "acme";
     if (connectionId) {
         var params =
         {
             credentialOfferParameters: {
-                definitionId: process.env.INVOICE_ID,
+                definitionId: process.env.POLICY_ID,
                 connectionId: connectionId,
                 credentialValues: {
-                    "Invoice Number":  req.body["invoiceNumber"],
-                    "Hospital Name": req.body["hospitalName"],
-                    "Invoice Date": req.body["invoiceDate"],
-                    "Insurance Policy Number": req.body["insurancePolicyNumber"],
-                    "Amount": req.body["amount"],
-                    "Treatment Description": req.body["treatmentDescription"],
+                    "Policy ID": req.body["policyID"],
+                    "Effective Date": req.body["effectiveDate"],
+                    "Expiry Date": req.body["expiryDate"],
+                    "Insurance Company": req.body["insuranceCompany"],
                 }
             }
         }
@@ -216,6 +234,44 @@ app.post('/api/hospital/issue', cors(), async function (req, res) {
     }
 });
 
+app.post('/api/verifyinvoice', cors(), async function (req, res) {
+    platform = "acme";
+    verificationAccepted = false;
+    const d = new Date();
+    const params =
+    {
+        verificationPolicyParameters: {
+            "name": "Proof of Invoice",
+            "version": "1.0",
+            "attributes": [
+                {
+                    "policyName": "Proof of Invoice",
+                    "attributeNames": [
+                        "Invoice Number",
+                        "Hospital Name",
+                        "Invoice Date",
+                        "Insurance Policy Number",
+                        "Amount",
+                        "Treatment Description"
+
+                    ],
+                    "restrictions": null
+                }
+            ],
+            "predicates": []
+        }
+    }
+    console.log("send verification request, connectionId = ", connectionId, "; params = ", params);
+    const resp = await client.sendVerificationFromParameters(connectionId, params);
+    res.status(200).send();
+});
+
+app.get('/api/verificationreceived', cors(), async function (req, res) {
+    console.log("Waiting for verification...");
+    await utils.until(_ => verificationAccepted === true);
+
+    res.status(200).send(verifyRecord);
+});
 
 
 async function findClientConnection(connectionId) {
@@ -228,7 +284,7 @@ async function getConnectionWithTimeout(connectionId) {
     const delay = new Promise(function (resolve, reject) {
         timeoutId = setTimeout(function () {
             reject(new Error('timeout'));
-        }, 5000);
+        }, 3000);
     });
 
     // overall timeout
@@ -238,44 +294,6 @@ async function getConnectionWithTimeout(connectionId) {
             return res;
         });
 }
-app.post('/api/verifypolicy', cors(), async function (req, res) {
-    platform = "hospital";
-    verificationAccepted = false;
-    const d = new Date();
-    const params =
-    {
-        verificationPolicyParameters: {
-            "name": "Proof of Insurance",
-            "version": "1.0",
-            "attributes": [
-                {
-                    "policyName": "Proof of Insurance",
-                    "attributeNames": [
-                        "Policy ID",
-                        "Effective Date",
-                        "Expiry Date",
-                        "Insurance Company"
-                    ],
-                    "restrictions": null
-                }
-            ],
-            "predicates": []
-        }
-    }
-    console.log("send verification request, connectionId = ", connectionId, "; params = ", params);
-    const resp = await client.sendVerificationFromParameters(connectionId, params);
-    // const resp = await client.createVerification();
-
-    res.status(200).send();
-});
-
-app.get('/api/verificationreceived', cors(), async function (req, res) {
-    console.log("Waiting for verification...");
-    await utils.until(_ => verificationAccepted === true);
-
-    res.status(200).send(verifyRecord);
-});
-
 
 app.post('/api/login', cors(), async function (req, res) {
     // send connectionless proof request for user registration details
@@ -309,12 +327,13 @@ app.post('/api/register', cors(), async function (req, res) {
     const attribs = JSON.stringify(req.body);
     console.log("invite= ", invite);
     cache.add(invite.connectionId, attribs);
-    res.status(200).send({ invite_url: invite.invitation });
+    console.log("setting invite URL to ", invite.invitationUrl);
+    res.status(200).send({ invite_url: invite.invitationUrl });
 });
 
 app.post('/api/acme/revoke', cors(), async function (req, res) {
-    console.log("revoking acme credential, id = ", hospitalCredentialId);
-    await client.revokeCredential(hospitalCredentialId);
+    console.log("revoking acme credential, id = ", acmeCredentialId);
+    await client.revokeCredential(acmeCredentialId);
     console.log("ACME Credential revoked!");
 
     console.log("++++ SEND MESSAGE WITH CONNECTION ID ", connectionId);
@@ -343,7 +362,6 @@ app.post('/api/credential_accepted', cors(), async function (req, res) {
     console.log("Waiting for credential to be accepted...");
     await utils.until(_ => credentialAccepted === true);
     credentialAccepted = false;
-    console.log("---------------------> SENDING CREDENTIAL ACCEPTED BACK TO CLIENT...")
     res.status(200).send();
 });
 
@@ -363,37 +381,124 @@ const getInvite = async (id) => {
     }
 }
 
-// for graceful closing
-var server = http.createServer(certOptions, app);
-async function onSignal() {
-    var webhookId = cache.get("webhookId");
-    const p1 = await client.removeWebhook(webhookId);
-    return Promise.all([p1]);
-}
-createTerminus(server, {
-    signals: ['SIGINT', 'SIGTERM'],
-    healthChecks: {},
-    onSignal
-});
 
-const PORT = 5002;
-var server = server.listen(PORT, async function () {
 
-    try {
-        const url_val = process.env.NGROK_URL + "/webhook";
 
-        console.log("Using ngrok (webhook) url of ", url_val);
-        var response = await client.createWebhook({
-            webhookParameters: {
-                url: url_val,  // process.env.NGROK_URL
-                type: "Notification"
-            }
-        });
-    }
-    catch (e) {
-        console.log(e);
-    }
+/**
+ * Listen on provided port, on all network interfaces.
+ */
 
+const port = normalizePort('3002');
+app.set('port', port);
+
+const server = http.createServer(app);
+
+server.listen(port, async function () {
+    const url_val = await ngrok.connect(port);
+    console.log("============= \n\n" + url_val + "\n\n =========");
+    let response = await client.createWebhook({
+        url: url_val + "/webhook",  // process.env.NGROK_URL
+        type: "Notification"
+    });
     cache.add("webhookId", response.id);
     console.log('Listening on port %d', server.address().port);
 });
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    let port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    let bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    let addr = server.address();
+    let bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// for graceful closing
+// var server = https.createServer(certOptions, app);
+// async function onSignal() {
+//     var webhookId = cache.get("webhookId");
+//     const p1 = await client.removeWebhook(webhookId);
+//     return Promise.all([p1]);
+// }
+// createTerminus(server, {
+//     signals: ['SIGINT', 'SIGTERM'],
+//     healthChecks: {},
+//     onSignal
+// });
+
+// const PORT = process.env.PORT || 3002;
+// var server = server.listen(PORT, async function () {
+
+//     try {
+//         const url_val = process.env.NGROK_URL + "/webhook";
+
+//         console.log("Using ngrok (webhook) url of ", url_val);
+//         var response = await client.createWebhook({
+//             webhookParameters: {
+//                 url: url_val,  // process.env.NGROK_URL
+//                 type: "Notification"
+//             }
+//         });
+//     }
+//     catch (e) {
+//         console.log(e);
+//     }
+
+//     cache.add("webhookId", response.id);
+//     console.log('Listening on port %d', server.address().port);
+// });

@@ -23,7 +23,7 @@ import crypto from 'crypto';
 import hospitalRoutes from './routes/hospital';
 import signInRoutes from './routes/signInRoutes';
 
-axios.defaults.baseURL = 'http://localhost:5002/';
+axios.defaults.baseURL = 'http://localhost:3002/';
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
 
@@ -278,7 +278,9 @@ export class App extends Component {
         const response = await signInRoutes.register(registrationInfo);
         console.log(response);
 
-        this.setState({ invite_url: "https://web.cloud.streetcred.id/link/?c_i=" + response.data.invite_url });
+        // this.setState({ invite_url: "https://web.cloud.streetcred.id/link/?c_i=" + response.data.invite_url });
+
+        this.setState({ invite_url: response.data.invite_url });
 
         const resp = await signInRoutes.waitForConnection();
 

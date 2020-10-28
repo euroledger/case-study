@@ -22,7 +22,7 @@ import crypto from 'crypto';
 import acmeRoutes from './routes/acme';
 import signInRoutes from './routes/signInRoutes';
 
-axios.defaults.baseURL = 'https://localhost:3002/';
+axios.defaults.baseURL = 'http://localhost:3002/';
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
 

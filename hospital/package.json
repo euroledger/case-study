@@ -11,6 +11,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
     "@streetcred.id/service-clients": "^1.1.3476",
+    "@trinsic/service-clients": "^1.1.4220",
     "axios": "^0.19.0",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
@@ -64,6 +65,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ],
-    "proxy": "https://localhost:5002"
+    "proxy": "http://localhost:3002"
   }
 }
